@@ -6,13 +6,13 @@
 #include <stdexcept>
 
 // QXlsx - Native Qt Excel library
-// #include "xlsxwriter.h"
 #include <xlsxdocument.h>
 #include <xlsxformat.h>
 
 namespace fs = std::filesystem;
 
 // ── LSK group key → spreadsheet row ──────────────────────────────────────────
+// These row numbers should match your template layout
 static const QList<QPair<QString,int>> LSK_ROW_MAP = {
     { "Cafe Bar",    31 },
     { "Cafe Food",   32 },
@@ -20,12 +20,6 @@ static const QList<QPair<QString,int>> LSK_ROW_MAP = {
     { "Laundry",     41 },
     { "Misc",        44 },
     { "Retail",      50 },
-// { "Cafe Bar",    0 },
-// { "Cafe Food",   1 },
-// { "Health Club", 2 },
-// { "Laundry",     3 },
-// { "Misc",        4 },
-// { "Retail",      5 },
 };
 
 static double groupAmt(const PeriodData &p, const QString &key)
@@ -46,7 +40,9 @@ fs::path exportDailyReport(
     // Resolve output path
     auto &cfg = Config::instance();
     fs::path outDir = outputDir.empty() ? cfg.configDir() : outputDir;
-    fs::path tmpltFile = outDir / "template.xlsx";
+
+    // Use provided template or look for default
+    fs::path tmpl = templatePath.empty() ? (outDir / "template.xlsx") : templatePath;
 
     QString dateStr = dash.as_of.toString("yyyy-MM-dd");
     fs::path outPath = outDir / ("DailyReport_" + dateStr.toStdString() + ".xlsx");
@@ -56,28 +52,19 @@ fs::path exportDailyReport(
         fs::create_directories(outDir);
     }
 
-    // Create Excel workbook using QXlsx
-    QXlsx::Document xlsx(tmpltFile.c_str());
+    // Load template if it exists, otherwise create new
+    QXlsx::Document xlsx(fs::exists(tmpl) ? QString::fromStdString(tmpl.string()) : "");
 
-    // Set column widths
-    xlsx.setColumnWidth(1, 25);  // Column A - labels
-    xlsx.setColumnWidth(2, 15);  // Column B - Today
-    xlsx.setColumnWidth(3, 15);  // Column C - MTD
-    xlsx.setColumnWidth(4, 15);  // Column D - MTD-LY
-    xlsx.setColumnWidth(5, 15);  // Column E - Variance $
-    xlsx.setColumnWidth(6, 15);  // Column F - Variance %
+    if (fs::exists(tmpl)) {
+        qInfo() << "[Export] Loaded template from:" << QString::fromStdString(tmpl.string());
+    } else {
+        qWarning() << "[Export] Template not found at:" << QString::fromStdString(tmpl.string());
+        qInfo() << "[Export] Creating report without template";
+    }
 
-    // Create formats
-    QXlsx::Format titleFormat;
-    titleFormat.setFontBold(true);
-    titleFormat.setFontSize(14);
-
-    QXlsx::Format boldFormat;
-    boldFormat.setFontBold(true);
-
-    QXlsx::Format headerFormat;
-    headerFormat.setFontBold(true);
-    headerFormat.setPatternBackgroundColor(QColor(211, 211, 211));  // Light gray
+    // Create formats for data we'll write
+    QXlsx::Format titleDateFormat;
+    titleDateFormat.setPatternBackgroundColor(Qt::yellow);
 
     QXlsx::Format currencyFormat;
     currencyFormat.setNumberFormat("$#,##0.00");
@@ -85,91 +72,38 @@ fs::path exportDailyReport(
     QXlsx::Format percentFormat;
     percentFormat.setNumberFormat("0.0%");
 
-    int dataRow = 1;
+    // Write date in designated cell (adjust if needed for your template)
+    xlsx.write("B2", dash.as_of.toString("MMM dd, yyyy"), titleDateFormat);
 
-    // Title (row 1)
-    // xlsx.write(dataRow, 1, "Financial Dashboard Report", titleFormat);
+    // Write LSK Revenue data to template rows
+    // Adjust column letters (B, C, D, E, F) based on your template layout
+    for (const auto &[groupName, row] : LSK_ROW_MAP) {
+        double today = groupAmt(dash.today, groupName);
+        double mtd = groupAmt(dash.mtd, groupName);
+        double mtd_ly = groupAmt(dash.mtd_last_year, groupName);
 
-    // Date (row 2)
-    dataRow = 3;
-    // xlsx.write(dataRow, 1, "Date:", boldFormat);
-    xlsx.write(dataRow, 1, dateStr);
+        // Write to specific cells (B=col2, C=col3, D=col4, E=col5, F=col6)
+        // Adjust column letters to match your template
+        xlsx.write(row, 2, today, currencyFormat);    // Column B
+        xlsx.write(row, 3, mtd, currencyFormat);      // Column C
+        xlsx.write(row, 4, mtd_ly, currencyFormat);   // Column D
 
-    // Cloudbeds Occupancy Stats (if available)
-    if (cb.has_value()) {
-        dataRow = 15;  // Add spacing
+        // Variance calculations
+        double variance = mtd - mtd_ly;
+        double variancePct = (mtd_ly != 0) ? (mtd - mtd_ly) / mtd_ly : 0.0;
 
-        // xlsx.write(dataRow, 1, "Room Revenue (Today):", boldFormat);
-        xlsx.write(dataRow, 2, cb->room_revenue, currencyFormat);
-
-        dataRow = 16;
-        QString occ_rooms = QString("%1 of %2").arg(cb->occupied_rooms).arg(cb->total_rooms);
-        // xlsx.write(dataRow, 1, "Occupied Rooms:", boldFormat);
-        xlsx.write(dataRow, 2, occ_rooms);
-
-        // dataRow++;
-        // xlsx.write(dataRow, 1, "Total Rooms:", boldFormat);
-        // xlsx.write(dataRow, 2, cb->total_rooms);
-        dataRow = 17;
-
-        // xlsx.write(dataRow, 1, "ADR (Today):", boldFormat);
-        xlsx.write(dataRow, 2, cb->adr, currencyFormat);
-
-        dataRow = 18;
-        xlsx.write(dataRow, 2, cb->mtd_adr, currencyFormat);
-
-        dataRow = 19;
-        xlsx.write(dataRow, 2, cb->ly_mtd_adr, currencyFormat);
-
-        dataRow = 20;
-        // xlsx.write(dataRow, 1, "RevPAR (Today):", boldFormat);
-        xlsx.write(dataRow, 2, cb->revpar, currencyFormat);
-
-        dataRow = 21;
-        // xlsx.write(dataRow, 1, "MTD Revenue:", boldFormat);
-        xlsx.write(dataRow, 2, cb->mtd_revpar, currencyFormat);
-        dataRow = 22;
-        xlsx.write(dataRow, 2, cb->ly_mtd_revpar, currencyFormat);
+        xlsx.write(row, 5, variance, currencyFormat); // Column E
+        xlsx.write(row, 6, variancePct, percentFormat); // Column F
     }
 
-
-    // Headers (row 26)
-    int headerRow = 26;
-    // xlsx.write(headerRow, 1, "Revenue Category", headerFormat);
-    // xlsx.write(headerRow, 2, "Today", headerFormat);
-    // xlsx.write(headerRow, 3, "MTD", headerFormat);
-    // xlsx.write(headerRow, 4, "MTD-LY", headerFormat);
-    // xlsx.write(headerRow, 5, "Variance $", headerFormat);
-    // xlsx.write(headerRow, 6, "Variance %", headerFormat);
-
-    // LSK Revenue by group (rows starts at 31)
-    dataRow = 27;
-    xlsx.write(dataRow, 2, cb->room_revenue, currencyFormat);
-    xlsx.write(dataRow, 3, cb->mtd_revenue, currencyFormat);
-    xlsx.write(dataRow, 4, cb->ly_mtd_revenue, currencyFormat);
-
-
-
-
-    dataRow = 31;
-    for (const auto &[groupName, idx] : LSK_ROW_MAP) {
-        // xlsx.write(dataRow, 1, groupName);
-        xlsx.write(idx, 2, groupAmt(dash.today, groupName), currencyFormat);
-        xlsx.write(idx, 3, groupAmt(dash.mtd, groupName), currencyFormat);
-        xlsx.write(idx, 4, groupAmt(dash.mtd_last_year, groupName), currencyFormat);
-        // xlsx.write(dataRow, 2, groupAmt(dash.today, groupName), currencyFormat);
-        // xlsx.write(dataRow, 3, groupAmt(dash.mtd, groupName), currencyFormat);
-        // xlsx.write(dataRow, 4, groupAmt(dash.mtd_last_year, groupName), currencyFormat);
-
-        // // Variance $ formula: MTD - MTD-LY
-        // QString varFormula = QString("=C%1-D%1").arg(dataRow);
-        // xlsx.write(dataRow, 5, varFormula, currencyFormat);
-        // //
-        // // Variance % formula: (MTD - MTD-LY) / MTD-LY with zero protection
-        // QString varPctFormula = QString("=IF(D%1=0,0,(C%1-D%1)/D%1)").arg(dataRow);
-        // xlsx.write(dataRow, 6, varPctFormula, percentFormat);
-
-        dataRow++;
+    // Write Cloudbeds data to template (adjust rows/columns as needed)
+    if (cb.has_value()) {
+        // Example: adjust these row numbers to match your template
+        xlsx.write(15, 2, cb->room_revenue, currencyFormat);
+        xlsx.write(16, 2, QString("%1 of %2").arg(cb->occupied_rooms).arg(cb->total_rooms));
+        xlsx.write(17, 2, cb->adr, currencyFormat);
+        xlsx.write(18, 2, cb->revpar, currencyFormat);
+        xlsx.write(19, 2, cb->mtd_revenue, currencyFormat);
     }
 
     // Save the workbook
