@@ -1,0 +1,11 @@
+{
+  "cloudbeds": {
+    "api_key": "your-cloudbeds-api-key-here",
+    "property_id": "your-cloudbeds-property-id-here"
+  },
+  "lsk": {
+    "client_id": "your-lsk-client-id-here",
+    "client_secret": "your-lsk-client-secret-here",
+    "business_location_id": "your-lsk-business-location-id-here"
+  }
+}

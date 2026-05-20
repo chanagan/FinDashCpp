@@ -1,0 +1,28 @@
+# Build directories
+build/
+cmake-build-*/
+_deps/
+
+# 3rdparty dependencies (auto-downloaded by FetchContent)
+3rdparty/qxlsx/
+3rdparty/QXlsx/
+
+# IDE files
+.idea/
+*.user
+*.user.*
+.vscode/
+*.swp
+*.swo
+
+# Config and output files
+config_dir.txt
+config.json
+Config.json
+.cloudbeds_occ_cache.json
+DailyReport_*.xlsx
+
+# System
+.DS_Store
+*.log
+*.tmp
