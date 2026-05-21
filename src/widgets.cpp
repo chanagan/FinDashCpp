@@ -209,16 +209,23 @@ void RoomOccupancyPanel::set(int row, int col, const QString &text, const QColor
 
 void RoomOccupancyPanel::populate(const CloudbedsMetrics &cb)
 {
+    double variance;
     set(m_rRooms,  1, fmtMoney(cb.room_revenue));
     set(m_rOcc,    1, cb.total_rooms
                       ? QString("%1 / %2").arg(cb.occupied_rooms).arg(cb.total_rooms)
                       : QStringLiteral("—"));
+    // adr - today - this month - this month last year
     set(m_rAdrTd,  1, fmtMoney(cb.adr));
     set(m_rAdrMtd, 1, fmtMoney(cb.mtd_adr));
     set(m_rAdrLy,  1, fmtMoney(cb.ly_mtd_adr));
+    variance = cb.ly_mtd_adr - cb.mtd_adr;
+    set(m_rAdrLy, 2, fmtMoney(variance));
+    // revpar - today - this month - this month last year
     set(m_rRevTd,  1, fmtMoney(cb.revpar));
     set(m_rRevMtd, 1, fmtMoney(cb.mtd_revpar));
     set(m_rRevLy,  1, fmtMoney(cb.ly_mtd_revpar));
+    variance = cb.ly_mtd_revpar - cb.mtd_revpar;
+    set(m_rRevLy, 2, fmtMoney(variance));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -318,8 +325,8 @@ void FinancialGrid::populate(const FinancialDashboard &dash, const CloudbedsMetr
 
     // Total row
     double totToday  = dash.today.total_amount + cb.room_revenue;
-    double totMtd    = dash.mtd.total_amount;
-    double totMtdLy  = dash.mtd_last_year.total_amount;
+    double totMtd    = dash.mtd.total_amount + cb.mtd_revenue;
+    double totMtdLy  = dash.mtd_last_year.total_amount + cb.ly_mtd_revenue;
     double totVarAmt = totMtd - totMtdLy;
     auto   totVarPct = dash.mtd_total_variance_pct();
 
