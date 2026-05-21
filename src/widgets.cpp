@@ -181,6 +181,7 @@ RoomOccupancyPanel::RoomOccupancyPanel(QWidget *parent) : QWidget(parent)
     layout->setContentsMargins(0, 0, 0, 0);
 
     m_table = new InfoTable(3, this);
+    // m_table->setColumnCount(4);
     m_table->setColWidths({175, 105, 90});
 
     m_table->addSectionRow("Room Occupancy Stats");
@@ -189,11 +190,11 @@ RoomOccupancyPanel::RoomOccupancyPanel(QWidget *parent) : QWidget(parent)
     m_table->addSectionRow("ADR");
     m_rAdrTd  = m_table->addDataRow("Today's ADR",      {"—"});
     m_rAdrMtd = m_table->addDataRow("MTD ADR",          {"—"}, true);
-    m_rAdrLy  = m_table->addDataRow("LY Month ADR",     {"—"});
+    m_rAdrLy  = m_table->addDataRow("LY Month ADR",     {"—", "—"});
     m_table->addSectionRow("RevPar");
     m_rRevTd  = m_table->addDataRow("Today's RevPar",   {"—"});
     m_rRevMtd = m_table->addDataRow("MTD RevPar",       {"—"}, true);
-    m_rRevLy  = m_table->addDataRow("LY Month RevPar",  {"—"});
+    m_rRevLy  = m_table->addDataRow("LY Month RevPar",  {"—", "—"});
 
     m_table->seal();
     layout->addWidget(m_table);
@@ -209,6 +210,9 @@ void RoomOccupancyPanel::set(int row, int col, const QString &text, const QColor
 
 void RoomOccupancyPanel::populate(const CloudbedsMetrics &cb)
 {
+    auto negFg = [](double v) { return v < 0 ? Palette::NEG_FG : QColor(); };
+    QTableWidgetItem *item;
+
     double variance;
     set(m_rRooms,  1, fmtMoney(cb.room_revenue));
     set(m_rOcc,    1, cb.total_rooms
@@ -218,14 +222,22 @@ void RoomOccupancyPanel::populate(const CloudbedsMetrics &cb)
     set(m_rAdrTd,  1, fmtMoney(cb.adr));
     set(m_rAdrMtd, 1, fmtMoney(cb.mtd_adr));
     set(m_rAdrLy,  1, fmtMoney(cb.ly_mtd_adr));
-    variance = cb.ly_mtd_adr - cb.mtd_adr;
+
+    variance = cb.mtd_adr - cb.ly_mtd_adr;
     set(m_rAdrLy, 2, fmtMoney(variance));
+    item = m_table->item(m_rAdrLy, 2);
+    if (variance < 0) item->setForeground(Qt::red);
+
     // revpar - today - this month - this month last year
     set(m_rRevTd,  1, fmtMoney(cb.revpar));
     set(m_rRevMtd, 1, fmtMoney(cb.mtd_revpar));
     set(m_rRevLy,  1, fmtMoney(cb.ly_mtd_revpar));
-    variance = cb.ly_mtd_revpar - cb.mtd_revpar;
+
+    variance = cb.mtd_revpar - cb.ly_mtd_revpar;
     set(m_rRevLy, 2, fmtMoney(variance));
+    item = m_table->item(m_rRevLy, 2);
+    if (variance < 0) item->setForeground(Qt::red);
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
