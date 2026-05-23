@@ -34,6 +34,10 @@ fs::path Config::findConfigDir()
 {
     const std::string subfolder = "FinDash";
 
+#ifdef Q_OS_WIN
+    qDebug() << "Looking for Windows config";
+#endif
+
     // 1. Environment variable override
     if (const char *env = std::getenv("FINDASH_CONFIG_DIR")) {
         fs::path p{env};
