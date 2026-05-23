@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QDateTime>
+#include <QStandardPaths>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -34,7 +35,21 @@ fs::path Config::findConfigDir()
 {
     const std::string subfolder = "FinDash";
 
+#ifdef Q_OS_WIN
+    qDebug() << "Looking for Windows config";
+    // Windows: OneDrive path with space
+    // "C:\Users\{username}\OneDrive - Island House Key West\FinDash\Config.json"
+    QString homeDirStr = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash";
+    // QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash/Config.json";
+    qDebug() << "Looking for config at (Windows):" << configPath;
+    fs::path p (configPath.toStdString());
+    return p;
+
+#endif
+
     // 1. Environment variable override
+    qInfo() << "[Config] - 1 - try environment variable";
     if (const char *env = std::getenv("FINDASH_CONFIG_DIR")) {
         fs::path p{env};
         if (hasConfig(p)) {
@@ -49,6 +64,7 @@ fs::path Config::findConfigDir()
         QCoreApplication::applicationDirPath().toStdString()
     );
     fs::path pointerFile = appDir / "config_dir.txt";
+    qInfo() << "[Config] - 2 - try pointer file";
     if (fs::exists(pointerFile)) {
         std::ifstream f(pointerFile);
         std::string line;
@@ -65,6 +81,7 @@ fs::path Config::findConfigDir()
     }
 
     // 3. OneDrive personal (macOS + Windows)
+    qInfo() << "[Config] - 3 - oneDrive personal";
     fs::path home = homeDir();
     std::vector<fs::path> candidates = {
         home / "OneDrive" / subfolder,
@@ -88,6 +105,7 @@ fs::path Config::findConfigDir()
     }
 
     // 4. Application directory (dev fallback)
+    qInfo() << "[Config] - 4 - application directory";
     qWarning() << "[Config]" << QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz")
                << "config.json not found in any candidate — using app dir.";
     return appDir;
@@ -112,7 +130,9 @@ fs::path Config::reportDefFilePath() const       { return m_configDir / "daily_r
 void Config::ensureLoaded() const
 {
     if (m_loaded) return;
-    QFile f(QString::fromStdString(configFilePath().string()));
+    QString fileName = QString::fromStdString(configFilePath().string());
+    QFile f(fileName);
+    // QFile f(QString::fromStdString(configFilePath().string()));
     if (!f.open(QIODevice::ReadOnly)) {
         qWarning() << "[Config] Cannot open" << f.fileName();
         m_loaded = true;
