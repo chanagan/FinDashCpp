@@ -7,9 +7,10 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
 
     QApplication app(argc, argv);
+    QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
+
     app.setApplicationName("FinDash");
     app.setApplicationVersion("1.0");
 

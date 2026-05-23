@@ -52,6 +52,9 @@ fs::path exportDailyReport(
         fs::create_directories(outDir);
     }
 
+    // going to use this to allow use of template-based formatting for some cells
+    QXlsx::Format originalFormat;
+
     // Load template if it exists, otherwise create new
     QXlsx::Document xlsx(fs::exists(tmpl) ? QString::fromStdString(tmpl.string()) : "");
 
@@ -73,7 +76,10 @@ fs::path exportDailyReport(
     percentFormat.setNumberFormat("0.0%");
 
     // Write date in designated cell (adjust if needed for your template)
-    xlsx.write("B2", dash.as_of.toString("MMM dd, yyyy"), titleDateFormat);
+    QString asOfDate = dash.as_of.toString("MMM dd, yyyy");
+    // originalFormat = xlsx.cellAt(3,1)->format();
+    // xlsx.write("A3", asOfDate);
+    xlsx.write("A3", dash.as_of);
 
     // Write LSK Revenue data to template rows
     // Adjust column letters (B, C, D, E, F) based on your template layout
@@ -84,27 +90,55 @@ fs::path exportDailyReport(
 
         // Write to specific cells (B=col2, C=col3, D=col4, E=col5, F=col6)
         // Adjust column letters to match your template
-        xlsx.write(row, 2, today, currencyFormat);    // Column B
-        xlsx.write(row, 3, mtd, currencyFormat);      // Column C
-        xlsx.write(row, 4, mtd_ly, currencyFormat);   // Column D
+        xlsx.write(row, 2, today);    // Column B
+        xlsx.write(row, 3, mtd);      // Column C
+        xlsx.write(row, 4, mtd_ly);   // Column D
 
         // Variance calculations
         double variance = mtd - mtd_ly;
         double variancePct = (mtd_ly != 0) ? (mtd - mtd_ly) / mtd_ly : 0.0;
 
-        xlsx.write(row, 5, variance, currencyFormat); // Column E
-        xlsx.write(row, 6, variancePct, percentFormat); // Column F
+        xlsx.write(row, 5, variance); // Column E
+        xlsx.write(row, 6, variancePct); // Column F
     }
 
     // Write Cloudbeds data to template (adjust rows/columns as needed)
     if (cb.has_value()) {
+        // double variance;
         // Example: adjust these row numbers to match your template
-        xlsx.write(15, 2, cb->room_revenue, currencyFormat);
-        xlsx.write(16, 2, QString("%1 of %2").arg(cb->occupied_rooms).arg(cb->total_rooms));
-        xlsx.write(17, 2, cb->adr, currencyFormat);
-        xlsx.write(18, 2, cb->revpar, currencyFormat);
-        xlsx.write(19, 2, cb->mtd_revenue, currencyFormat);
+        xlsx.write("B15", cb->room_revenue);
+        xlsx.write("B16", QString("%1 of %2").arg(cb->occupied_rooms).arg(cb->total_rooms));
+
+        // ADR
+        xlsx.write("B17", cb->adr);
+        xlsx.write("B18", cb->mtd_adr);
+        xlsx.write("B19", cb->ly_mtd_adr);
+        // variance = cb->mtd_adr - cb->ly_mtd_adr;
+        // originalFormat = xlsx.cellAt(19,3)->format();
+        // xlsx.write(19,3, variance, originalFormat);
+        xlsx.write("C19", "=(B18-B19)");
+
+        // RevPar
+        xlsx.write("B20", cb->revpar);
+        xlsx.write("B21", cb->mtd_revpar);
+        xlsx.write("B22",cb->ly_mtd_revpar);
+        // variance = cb->mtd_revpar - cb->ly_mtd_revpar;
+        // originalFormat = xlsx.cellAt(22,3)->format();
+        // xlsx.write(22,3, variance, originalFormat);
+        xlsx.write("C22", "=(B21-B22)");
+
+        // Revenue
+        // xlsx.write(27,2,cb->room_revenue, currencyFormat);
+        xlsx.write("B27", cb->room_revenue);
+        xlsx.write("C27",cb->mtd_revenue);
+        xlsx.write("D27",cb->ly_mtd_revenue);
+        xlsx.write("E27", "=+C27-D27");
+        xlsx.write("F27", "=+C27/D27-1");
+
     }
+
+    xlsx.write("E58", "=+C58-D58");
+    xlsx.write("F58", "=+C58/D58-1");
 
     // Save the workbook
     QString outPathQt = QString::fromStdString(outPath.string());
