@@ -298,6 +298,7 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
     // Step 2: revenue from report (Today / MTD / MTD-LY all in one response)
     auto payload = reportGet(REPORT_ID, {{"format", "raw"},
                                          {"date",   isoDate(targetDate)}});
+    QByteArray responseBody = QJsonDocument(payload).toJson();
 
     // Navigate: records → "Room Rate" → strip-whitespace key → period → metric → sum
     auto stripKeys = [](const QJsonObject &obj) {

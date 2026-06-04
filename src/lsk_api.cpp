@@ -101,6 +101,7 @@ QJsonObject LskApi::getDailyTotals(const QDate &date)
 
     qInfo() << "[LSK] Fetching daily totals for" << date.toString(Qt::ISODate);
     QJsonObject response = httpGet(url, params);
+    QByteArray responseBody = QJsonDocument(response).toJson();
     qDebug() << "[LSK] Daily response:" << QJsonDocument(response).toJson();
     return response;
 }
