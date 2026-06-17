@@ -119,21 +119,21 @@ QWidget *DashboardWindow::buildBody()
     leftLayout->setSpacing(8);
     leftLayout->setContentsMargins(0, 4, 8, 4);
 
-    leftLayout->addWidget(makeSectionLabel("REVENUE COMPARISON"));
+    leftLayout->addWidget(makeSectionLabel("REVENUE Comparison"));
     m_comparison = new ComparisonPanel(leftContent);
     leftLayout->addWidget(m_comparison);
 
     leftLayout->addSpacing(6);
     leftLayout->addWidget(makeHLine());
 
-    leftLayout->addWidget(makeSectionLabel("ROOMS  ·  CLOUDBEDS"));
+    leftLayout->addWidget(makeSectionLabel("ROOMS  ·  Cloudbeds"));
     m_roomPanel = new RoomOccupancyPanel(leftContent);
     leftLayout->addWidget(m_roomPanel);
 
     leftLayout->addSpacing(6);
     leftLayout->addWidget(makeHLine());
 
-    leftLayout->addWidget(makeSectionLabel("REVENUE  ·  LIGHTSPEED"));
+    leftLayout->addWidget(makeSectionLabel("REVENUE  ·  Cloudbeds & Lightspeed"));
     m_grid = new FinancialGrid(leftContent);
     leftLayout->addWidget(m_grid, 1);
     leftLayout->addStretch();
