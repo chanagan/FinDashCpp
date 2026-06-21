@@ -16,6 +16,51 @@
 #include <stdexcept>
 #include <fstream>
 
+struct PeriodValues
+{
+    double today = 0.0;
+    double mtd = 0.0;
+    double mtdLY = 0.0;
+
+    PeriodValues& operator+=(const PeriodValues& other) {
+        today += other.today;
+        mtd   += other.mtd;
+        mtdLY += other.mtdLY;
+        return *this;
+    }
+};
+
+PeriodValues parseJsonValues(const QJsonObject &revenueType)
+{
+    double yest    = revenueType["Today"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    double mtd    = revenueType["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    double mtdLY    = revenueType["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+
+    return PeriodValues{yest, mtd, mtdLY};
+};
+
+// all these roll together for 'Other Charges
+QStringList otherCharges = {
+    "Other Room Charges Cancelation Fee",
+    "Other Room Charges Cleaning Fee",
+    "Other Room Charges Damages",
+    "Other Room Charges Early Check-Out Fee",
+    "Other Room Charges Forfeit",
+    "Other Room Charges Guest Laundry",
+    "Other Room Charges Hair Dryer",
+};
+// -------------
+// getRevenueValues - get yesterday / mtd / ly-mtd for a revenue type
+//
+std::tuple <double, double, double> getRevenueValues(QJsonObject revenueType)
+{
+    double yest    = revenueType["Today"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    double mtd    = revenueType["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    double mtdLY    = revenueType["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    return std::make_tuple(yest, mtd, mtdLY);
+}
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CloudbedsApiClient — construction
 // ─────────────────────────────────────────────────────────────────────────────
@@ -313,7 +358,40 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
     auto revMtd    = roomRate["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
     auto revLyMtd  = roomRate["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
 
-    qInfo() << "[Cloudbeds] revenue today=" << revYest << "  MTD=" << revMtd << "  MTD-LY=" << revLyMtd;
+    qInfo() << "[Cloudbeds clients] revenue today=" << revYest << "  MTD=" << revMtd << "  MTD-LY=" << revLyMtd;
+
+    auto itmsSvcs = stripKeys(payload["records"].toObject()["Items & Services"].toObject());
+    // auto canxFee = stripKeys(itmsSvcs["Other Room Charges Cancelation Fee"].toObject());
+
+    PeriodValues tot;
+    PeriodValues pv;
+    for (const QString& s : otherCharges) {
+        auto otherFee = stripKeys(itmsSvcs[s].toObject());
+        pv = parseJsonValues(otherFee);
+        tot += pv;
+        qInfo() << "[Cloudbeds clients] " << s << ": " << pv.today << "  MTD=" << pv.mtd << "  MTD-LY=" << pv.mtdLY;
+    }
+    qInfo() << "[Cloudbeds clients] Total Other: " << tot.today << "  MTD=" << tot.mtd << "  MTD-LY=" << tot.mtdLY;
+
+    // PeriodValues r = parseJsonValues(canxFee);
+    // qInfo() << "[Cloudbeds clients] canx revenue today=" << r.today << "  MTD=" << r.mtd << "  MTD-LY=" << r.mtdLY;
+    //
+    //
+    //
+    //
+    // auto [yester, mtd, mtdLY] = getRevenueValues(canxFee);
+    // // what if i do that again with the auto - maybe an issue
+    // // - make the function so it get all the other revenue and returns it here - makes better sense for where we are
+    // qInfo() << "[Cloudbeds] canx revenue today=" << yester << "  MTD=" << mtd << "  MTD-LY=" << mtdLY;
+    // // auto canxYestr    = canxFee["Today"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    // // auto canxMtd    = canxFee["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    // // auto canxLyMtd    = canxFee["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    //
+    // // auto itmsSvcsCanxFee  = stripKeys(payload["records"].toObject()["Items & Services"].toObject())["Other Room Charges Cancelation Fee"].toObject();
+    // // auto canxYes    = itmsSvcsCanxFee["Today"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    // // auto canxMtd    = itmsSvcsCanxFee["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    // // auto canxLyMtd  = itmsSvcsCanxFee["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+
 
     // Step 3: assemble KPIs
     CloudbedsMetrics cb;

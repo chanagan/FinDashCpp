@@ -99,10 +99,10 @@ QJsonObject LskApi::getDailyTotals(const QDate &date)
     params["groupBy"] = "accountingGroup";
     params["date"] = formatDate(date);
 
-    qInfo() << "[LSK] Fetching daily totals for" << date.toString(Qt::ISODate);
+    qInfo() << "[LSK api] Fetching daily totals for" << date.toString(Qt::ISODate);
     QJsonObject response = httpGet(url, params);
     QByteArray responseBody = QJsonDocument(response).toJson();
-    qDebug() << "[LSK] Daily response:" << QJsonDocument(response).toJson();
+    // qDebug() << "[LSK] Daily response:" << QJsonDocument(response).toJson();
     return response;
 }
 
@@ -123,9 +123,9 @@ QJsonObject LskApi::getMtdTotals(const QDate &date)
     params["from"] = fromDate;
     params["to"] = toDate;
 
-    qInfo() << "[LSK] Fetching MTD totals for" << date.toString(Qt::ISODate);
+    qInfo() << "[LSK api] Fetching MTD totals for" << date.toString(Qt::ISODate);
     QJsonObject response = httpGet(url, params);
-    qDebug() << R"([LSK] MTD response:)" << QJsonDocument(response).toJson();
+    // qDebug() << R"([LSK] MTD response:)" << QJsonDocument(response).toJson();
 
     return response;
 }
@@ -153,9 +153,9 @@ QJsonObject LskApi::getLyMtdTotals(const QDate &date)
     params["from"] = fromDate;
     params["to"] = toDate;
 
-    qInfo() << "[LSK] Fetching LY-MTD totals for" << thisDateLastYear.toString(Qt::ISODate);
+    qInfo() << "[LSK api] Fetching LY-MTD totals for" << thisDateLastYear.toString(Qt::ISODate);
     QJsonObject response = httpGet(url, params);
-    qDebug() << R"([LSK] LY-MTD response:)" << QJsonDocument(response).toJson();
+    // qDebug() << R"([LSK] LY-MTD response:)" << QJsonDocument(response).toJson();
 
     return response;
 }
@@ -221,7 +221,7 @@ FinancialDashboard LskApi::buildDashboard(const QDate &date,
     dashboard.same_day_last_year = PeriodData();
     // dashboard.mtd_last_year = PeriodData();
 
-    qInfo() << "[LSK] Dashboard built: today total =" << dashboard.today.total_amount
+    qInfo() << "[LSK api] Dashboard built: today total =" << dashboard.today.total_amount
     << "  MTD total =" << dashboard.mtd.total_amount
     << "  MTD-LY total =" << dashboard.mtd_last_year.total_amount;
 
