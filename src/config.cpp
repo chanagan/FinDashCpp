@@ -41,7 +41,7 @@ fs::path Config::findConfigDir()
     QString homeDirStr = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
     QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash";
     // QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash/Config.json";
-    qDebug() << "Looking for config at (Windows):" << configPath;
+    qDebug() << "Found config at (Windows):" << configPath;
     fs::path p (configPath.toStdString());
     return p;
 #elif defined(Q_OS_MAC)
@@ -49,14 +49,14 @@ fs::path Config::findConfigDir()
     // ~/Library/CloudStorage/OneDrive-IslandHouseKeyWest/FinDash/Config.json
     QString homeDir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
     QString configPath = homeDir + "/Library/CloudStorage/OneDrive-IslandHouseKeyWest/FinDash/Config.json";
-    qDebug() << "Looking for config at (macOS):" << configPath;
+    qDebug() << "Found config at (macOS):" << configPath;
     fs::path p (configPath.toStdString());
     return p;
 #else
     // Linux: Use alternative location
     QString homeDir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
     QString configPath = homeDir + "/OneDrive/FinDash/Config.json";
-    qDebug() << "Looking for config at (Linux):" << configPath;
+    qDebug() << "Found config at (Linux):" << configPath;
     fs::path p (configPath.toStdString());
     return p;
 #endif
