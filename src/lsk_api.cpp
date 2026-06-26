@@ -125,6 +125,7 @@ QJsonObject LskApi::getMtdTotals(const QDate &date)
 
     qInfo() << "[LSK api] Fetching MTD totals for" << date.toString(Qt::ISODate);
     QJsonObject response = httpGet(url, params);
+    QByteArray responseBody = QJsonDocument(response).toJson();
     // qDebug() << R"([LSK] MTD response:)" << QJsonDocument(response).toJson();
 
     return response;
@@ -155,6 +156,7 @@ QJsonObject LskApi::getLyMtdTotals(const QDate &date)
 
     qInfo() << "[LSK api] Fetching LY-MTD totals for" << thisDateLastYear.toString(Qt::ISODate);
     QJsonObject response = httpGet(url, params);
+    QByteArray responseBody = QJsonDocument(response).toJson();
     // qDebug() << R"([LSK] LY-MTD response:)" << QJsonDocument(response).toJson();
 
     return response;

@@ -399,10 +399,12 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
     cb.occupied_rooms = occ.this_date_occupied;
     cb.total_rooms    = occ.this_date_capacity;
     cb.room_revenue   = revYest;
+    cb.room_revenue_othr   = tot.today;
     cb.revpar         = occ.this_date_capacity  ? revYest / occ.this_date_capacity  : 0.0;
     cb.adr            = occ.this_date_occupied  ? revYest / occ.this_date_occupied  : 0.0;
 
     cb.mtd_revenue    = revMtd;
+    cb.mtd_revenue_othr    = tot.mtd;
     cb.mtd_revpar     = occ.this_month_capacity ? revMtd  / occ.this_month_capacity : 0.0;
     cb.mtd_adr        = occ.this_month_occupied ? revMtd  / occ.this_month_occupied : 0.0;
 
@@ -410,7 +412,9 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
     cb.ly_date_capacity  = occ.ly_date_capacity;
     cb.ly_month_occupied = occ.ly_month_occupied;
     cb.ly_month_capacity = occ.ly_month_capacity;
+
     cb.ly_mtd_revenue    = revLyMtd;
+    cb.ly_mtd_revenue_othr    = tot.mtdLY;
     cb.ly_mtd_revpar     = occ.ly_month_capacity ? revLyMtd / occ.ly_month_capacity : 0.0;
     cb.ly_mtd_adr        = occ.ly_month_occupied ? revLyMtd / occ.ly_month_occupied : 0.0;
 
