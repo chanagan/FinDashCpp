@@ -13,13 +13,23 @@ namespace fs = std::filesystem;
 
 // ── LSK group key → spreadsheet row ──────────────────────────────────────────
 // These row numbers should match your template layout
+// static const QList<QPair<QString,int>> LSK_ROW_MAP = {
+//     { "Cafe Bar",    31 },
+//     { "Cafe Food",   32 },
+//     { "Health Club", 37 },
+//     { "Laundry",     41 },
+//     { "Misc",        44 },
+//     { "Retail",      50 },
+// };
 static const QList<QPair<QString,int>> LSK_ROW_MAP = {
     { "Cafe Bar",    31 },
     { "Cafe Food",   32 },
     { "Health Club", 37 },
+    { "Massage",     39 },
+    { "Guest Relations Exp",     40 },
     { "Laundry",     41 },
     { "Misc",        44 },
-    { "Retail",      50 },
+    { "Retail",      38 },
 };
 
 static double groupAmt(const PeriodData &p, const QString &key)
@@ -134,6 +144,14 @@ fs::path exportDailyReport(
         xlsx.write("D27",cb->ly_mtd_revenue);
         xlsx.write("E27", "=+C27-D27");
         xlsx.write("F27", "=+C27/D27-1");
+
+        // Revenue - Other Row 29
+        // xlsx.write(29,2,cb->room_revenue, currencyFormat);
+        xlsx.write("B29", cb->room_revenue_othr);
+        xlsx.write("C29",cb->mtd_revenue_othr);
+        xlsx.write("D29",cb->ly_mtd_revenue_othr);
+        xlsx.write("E29", "=+C29-D29");
+        xlsx.write("F29", "=+C29/D29-1");
 
     }
 

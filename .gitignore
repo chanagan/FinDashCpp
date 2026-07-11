@@ -16,6 +16,8 @@ _deps/
 *.swo
 
 # Config and output files
+config/.lsk_tokens.json
+config/*.json
 config_dir.txt
 config.json
 Config.json
@@ -26,3 +28,4 @@ DailyReport_*.xlsx
 .DS_Store
 *.log
 *.tmp
+/config/~$template.xlsx

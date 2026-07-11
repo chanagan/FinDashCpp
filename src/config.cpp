@@ -36,14 +36,22 @@ fs::path Config::findConfigDir()
 
 #ifdef Q_OS_WIN
     qDebug() << "Looking for Windows config";
+
+    QString appDirPath = QCoreApplication::applicationDirPath();
+    qDebug() << "Application Directory Path:" << appDirPath;
+    QString appDirConfigPath = appDirPath + "/../../config";
+    qDebug() << "Application Config Path:" << appDirConfigPath;
+    fs::path p (appDirConfigPath.toStdString());
+    return p;
+
     // Windows: OneDrive path with space
     // "C:\Users\{username}\OneDrive - Island House Key West\FinDash\Config.json"
-    QString homeDirStr = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash";
-    // QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash/Config.json";
-    qDebug() << "Found config at (Windows):" << configPath;
-    fs::path p (configPath.toStdString());
-    return p;
+    // QString homeDirStr = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+    // QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash";
+    // // QString configPath = homeDirStr + "/OneDrive - Island House Key West/FinDash/Config.json";
+    // qDebug() << "Found config at (Windows):" << configPath;
+    // fs::path p (configPath.toStdString());
+    // return p;
 #elif defined(Q_OS_MAC)
     // macOS: CloudStorage mounted OneDrive
     // ~/Library/CloudStorage/OneDrive-IslandHouseKeyWest/FinDash/Config.json
