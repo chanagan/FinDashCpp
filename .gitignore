@@ -26,3 +26,9 @@ DailyReport_*.xlsx
 .DS_Store
 *.log
 *.tmp
+/config/.lsk_tokens.json
+/.lsk_tokens.json
+/capture-app-gui.png
+/daily_rep_upd_def.json
+/config/template.xlsx
+/template.xlsx
