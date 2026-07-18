@@ -25,11 +25,11 @@ static const QList<QPair<QString,int>> LSK_ROW_MAP = {
     { "Cafe Bar",    31 },
     { "Cafe Food",   32 },
     { "Health Club", 37 },
-    { "Massage",     39 },
-    { "Guest Relations Exp",     40 },
-    { "Laundry",     41 },
-    { "Misc",        44 },
-    { "Retail",      38 },
+    { "Retail",      39 },
+    { "Massage",     40 },
+    // { "Guest Relations Exp",     40 },
+    // { "Laundry",     41 },
+    // { "Misc",        44 },
 };
 
 static double groupAmt(const PeriodData &p, const QString &key)
@@ -41,6 +41,26 @@ static double groupAmt(const PeriodData &p, const QString &key)
     return 0.0;
 }
 
+// Function to get the user's Downloads directory path
+fs::path get_downloads_path() {
+    // Try platform-specific environment variables
+#ifdef _WIN32
+    const char* userProfile = std::getenv("USERPROFILE");
+    if (!userProfile) throw std::runtime_error("USERPROFILE not set");
+    return fs::path(userProfile) / "Downloads";
+#elif __APPLE__
+    const char* home = std::getenv("HOME");
+    if (!home) throw std::runtime_error("HOME not set");
+    return fs::path(home) / "Downloads";
+#else // Linux / Unix
+    const char* xdg = std::getenv("XDG_DOWNLOAD_DIR");
+    if (xdg) return fs::path(xdg);
+    const char* home = std::getenv("HOME");
+    if (!home) throw std::runtime_error("HOME not set");
+    return fs::path(home) / "Downloads";
+#endif
+}
+
 fs::path exportDailyReport(
     const FinancialDashboard          &dash,
     const std::optional<CloudbedsMetrics> &cb,
@@ -50,12 +70,15 @@ fs::path exportDailyReport(
     // Resolve output path
     auto &cfg = Config::instance();
     fs::path outDir = outputDir.empty() ? cfg.configDir() : outputDir;
+    fs::path downLoads = get_downloads_path();
+    qInfo() << "[Export] Downloads path: " << QString::fromStdString(downLoads.string());
+
 
     // Use provided template or look for default
     fs::path tmpl = templatePath.empty() ? (outDir / "template.xlsx") : templatePath;
 
     QString dateStr = dash.as_of.toString("yyyy-MM-dd");
-    fs::path outPath = outDir / ("DailyReport_" + dateStr.toStdString() + ".xlsx");
+    fs::path outPath = downLoads / ("DailyReport_" + dateStr.toStdString() + ".xlsx");
 
     // Create output directory if it doesn't exist
     if (!fs::exists(outDir)) {

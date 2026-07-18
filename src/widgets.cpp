@@ -259,14 +259,14 @@ const QStringList FinancialGrid::COLS = {
 const QList<QPair<QString, QString>> FinancialGrid::GROUPS = {
     {"Cafe Bar", "Café Bar"},
     {"Cafe Food", "Café Food"},
-    {"Bar Notes", "Bar Notes"},
-    {"Misc", "Misc Adjust"},
+    // {"Bar Notes", "Bar Notes"},
+    // {"Misc", "Misc Adjust"},
     {"Health Club", "Guest Privilege"},
     {"Retail", "Retail"},
     {"Massage", "Massage"},
-    {"CAFE LABOR", "Café Labor"},
-    {"Guest Relations Exp", "Guest Relations Exp"},
-    {"Laundry", "Laundry"},
+    // {"CAFE LABOR", "Café Labor"},
+    // {"Guest Relations Exp", "Guest Relations Exp"},
+    // {"Laundry", "Laundry"},
 };
 
 FinancialGrid::FinancialGrid(QWidget* parent)
