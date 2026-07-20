@@ -365,32 +365,25 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
 
     PeriodValues tot;
     PeriodValues pv;
+    // sum up the other income from items & services
     for (const QString& s : otherCharges) {
         auto otherFee = stripKeys(itmsSvcs[s].toObject());
         pv = parseJsonValues(otherFee);
         tot += pv;
         qInfo() << "[Cloudbeds clients] " << s << ": " << pv.today << "  MTD=" << pv.mtd << "  MTD-LY=" << pv.mtdLY;
     }
+    // now add in the cancellation fees
+    auto cancellation = stripKeys(payload["records"].toObject()["Cancellation"].toObject());
+    auto cancelRev = stripKeys(cancellation["Room Revenue - Cancellation"].toObject());
+    pv = parseJsonValues(cancelRev);
+    tot += pv;
+    qInfo() << "[Cloudbeds clients] Cancellation:" << pv.today << "  MTD=" << pv.mtd << "  MTD-LY=" << pv.mtdLY;
     qInfo() << "[Cloudbeds clients] Total Other: " << tot.today << "  MTD=" << tot.mtd << "  MTD-LY=" << tot.mtdLY;
 
-    // PeriodValues r = parseJsonValues(canxFee);
-    // qInfo() << "[Cloudbeds clients] canx revenue today=" << r.today << "  MTD=" << r.mtd << "  MTD-LY=" << r.mtdLY;
-    //
-    //
-    //
-    //
-    // auto [yester, mtd, mtdLY] = getRevenueValues(canxFee);
-    // // what if i do that again with the auto - maybe an issue
-    // // - make the function so it get all the other revenue and returns it here - makes better sense for where we are
-    // qInfo() << "[Cloudbeds] canx revenue today=" << yester << "  MTD=" << mtd << "  MTD-LY=" << mtdLY;
-    // // auto canxYestr    = canxFee["Today"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
-    // // auto canxMtd    = canxFee["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
-    // // auto canxLyMtd    = canxFee["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
-    //
-    // // auto itmsSvcsCanxFee  = stripKeys(payload["records"].toObject()["Items & Services"].toObject())["Other Room Charges Cancelation Fee"].toObject();
-    // // auto canxYes    = itmsSvcsCanxFee["Today"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
-    // // auto canxMtd    = itmsSvcsCanxFee["MTD"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
-    // // auto canxLyMtd  = itmsSvcsCanxFee["MTD-LY"].toObject()["balance_due_amount_converted_rate"].toObject()["sum"].toDouble();
+    auto hlthClubMonMin = stripKeys(itmsSvcs["Health Club - Guest Privilege Min Monthly Spend Adust - Healthclub"].toObject());
+    pv = parseJsonValues(hlthClubMonMin);
+    qInfo() << "[Cloudbeds clients] Health Mon Min:" << pv.today << "  MTD=" << pv.mtd << "  MTD-LY=" << pv.mtdLY;
+    // tot += pv;
 
 
     // Step 3: assemble KPIs
@@ -400,11 +393,13 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
     cb.total_rooms    = occ.this_date_capacity;
     cb.room_revenue   = revYest;
     cb.room_revenue_othr   = tot.today;
+    cb.health_club_mon_min = pv.today;
     cb.revpar         = occ.this_date_capacity  ? revYest / occ.this_date_capacity  : 0.0;
     cb.adr            = occ.this_date_occupied  ? revYest / occ.this_date_occupied  : 0.0;
 
     cb.mtd_revenue    = revMtd;
     cb.mtd_revenue_othr    = tot.mtd;
+    cb.mtd_health_club_mon_min = pv.mtd;
     cb.mtd_revpar     = occ.this_month_capacity ? revMtd  / occ.this_month_capacity : 0.0;
     cb.mtd_adr        = occ.this_month_occupied ? revMtd  / occ.this_month_occupied : 0.0;
 
@@ -415,6 +410,7 @@ CloudbedsMetrics CloudbedsApiClient::fetchMetrics(const QDate &targetDate)
 
     cb.ly_mtd_revenue    = revLyMtd;
     cb.ly_mtd_revenue_othr    = tot.mtdLY;
+    cb.ly_mtd_health_club_mon_min = pv.mtdLY;
     cb.ly_mtd_revpar     = occ.ly_month_capacity ? revLyMtd / occ.ly_month_capacity : 0.0;
     cb.ly_mtd_adr        = occ.ly_month_occupied ? revLyMtd / occ.ly_month_occupied : 0.0;
 

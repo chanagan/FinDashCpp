@@ -176,6 +176,13 @@ fs::path exportDailyReport(
         xlsx.write("E29", "=+C29-D29");
         xlsx.write("F29", "=+C29/D29-1");
 
+        // Revenue - Health Club Monthly Minimum Row 38
+        // xlsx.write(29,2,cb->room_revenue, currencyFormat);
+        xlsx.write("B38", cb->health_club_mon_min);
+        xlsx.write("C38",cb->mtd_health_club_mon_min);
+        xlsx.write("D38",cb->ly_mtd_health_club_mon_min);
+        xlsx.write("E38", "=+C38-D38");
+        xlsx.write("F38", "=+C38/D38-1");
     }
 
     xlsx.write("E58", "=+C58-D58");

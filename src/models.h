@@ -67,6 +67,8 @@ struct CloudbedsMetrics
 
     double room_revenue = 0.0;
     double room_revenue_othr = 0.0;
+    double health_club_mon_min = 0.0;
+
     double adr = 0.0;
     double revpar = 0.0;
     double occupancy_pct = 0.0;
@@ -74,6 +76,8 @@ struct CloudbedsMetrics
     // MTD
     double mtd_revenue = 0.0;
     double mtd_revenue_othr = 0.0;
+    double mtd_health_club_mon_min = 0.0;
+
     double mtd_revpar = 0.0;
     double mtd_adr = 0.0;
 
@@ -84,6 +88,7 @@ struct CloudbedsMetrics
     int ly_month_capacity = 0;
     double ly_mtd_revenue = 0.0;
     double ly_mtd_revenue_othr = 0.0;
+    double ly_mtd_health_club_mon_min = 0.0;
     double ly_mtd_revpar = 0.0;
     double ly_mtd_adr = 0.0;
 };
